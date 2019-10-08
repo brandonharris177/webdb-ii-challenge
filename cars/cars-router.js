@@ -45,6 +45,48 @@ router.post('/', validateCar, (req, res) => {
     
 });
 
+router.delete('/:id', validateCarId, (req, res) => {
+    db('cars')
+    .where('id', '=', req.params.id)
+    .first()
+    .del()
+    .then(response => {
+        console.log(`response`, response)
+        if (response === 1) {
+            res.status(204).json('car deleted')
+        } else {
+            res.status(500).json('server error')
+        }  
+    }).catch(error => {
+        res.status(500).json(error)
+    })
+    
+});
+
+router.put('/:id', validateCarId, (req, res) => {
+    // console.log(`req.params.id`, req.params.id)
+    db('cars')
+    .where('id', '=', req.params.id)
+    .first()
+    .update(req.body)
+    .then(response => {
+        if (response === 1) {
+            db.select('*').from('cars')
+            .where('id', '=', req.params.id)
+            .first()
+            .then(car => {
+                res.status(200).json(car)
+            }).catch(error => {
+                res.status(500).json(error)
+            })
+        } else {
+            res.status(500).json('server error')
+        }
+    }).catch(error => {
+        res.status(500).json(error)
+    }) 
+});
+
 function validateCarId(req, res, next) {
     db.select('*').from('cars')
     .where('id', '=', req.params.id)
@@ -74,3 +116,4 @@ function validateCar(req, res, next) {
 };
 
 module.exports = router;
+
