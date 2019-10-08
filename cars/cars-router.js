@@ -8,40 +8,69 @@ const db = knex(knexConfig.development);
 const router = express.Router();
 
 router.get('/', (req, res) => {
-    db('cars')
+    db.select('*').from('cars')
     .then(cars => {
-      res.json(cars); 
-    })
-    .catch (err => {
-      res.status(500).json({ message: 'Failed to retrieve cars' });
-    });
-  });
-  
-  router.get('/:id', (req, res) => {
-    const { id } = req.params;
-  
-    db('cars').where({ id }).first()
+        res.status(200).json(cars)
+    }).catch(error => {
+        res.status(500).json(error)
+    })  
+});
+
+router.get('/:id', validateCarId, (req, res) => {
+    db.select('*').from('cars')
+    .where('id', '=', req.params.id)
+    .first()
     .then(car => {
-      res.json(car);
-    }) 
-    .catch (err => {
-      res.status(500).json({ message: 'Failed to retrieve car' });
-    });
-  });
-  
-  router.post('/', (req, res) => {
-    const carData = req.body;
-    db('cars').insert(carData)
-    .then(ids => {
-      db('cars').where({ id: ids[0] })
-      .then(newCarEntry => {
-        res.status(201).json(newCarEntry);
-      });
+        res.status(200).json(car)
+    }).catch(error => {
+        res.status(500).json(error)
     })
-    .catch (err => {
-      console.log('POST error', err);
-      res.status(500).json({ message: "Failed to store data" });
-    });
-  });
+});
+
+router.post('/', validateCar, (req, res) => {
+    db('cars').insert(req.body, 'id')
+    .then(id => {
+        // console.log(`id`, id)
+        db.select('*').from('cars')
+        .where('id', '=', id[0])
+        .then(car => {
+            // console.log(`car`, car)
+            res.status(201).json(car[0])
+        }).catch(error => {
+            res.status(500).json(error)
+        })
+    }).catch(error => {
+        res.status(500).json(error)
+    })
+    
+});
+
+function validateCarId(req, res, next) {
+    db.select('*').from('cars')
+    .where('id', '=', req.params.id)
+    .first()
+    .then(car => {
+        if(car) {
+            next();
+        } else {
+            res.status(404).json({Messgae: "invalid cart id"})
+        }
+    }).catch (error =>
+        res.status(500).json({error: `Server error: ${error}`})
+    )
+};
+
+function validateCar(req, res, next) {
+    if (req.body) {
+        if (req.body.name && req.body.budget) {
+            next ();
+        } else {
+            res.status(400).json({ message: "missing required name or budget field"  })
+        }
+    } else {
+        res.status(400).json({ message: "missing car data" })
+    }
+    
+};
 
 module.exports = router;
