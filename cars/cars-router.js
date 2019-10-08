@@ -53,7 +53,7 @@ function validateCarId(req, res, next) {
         if(car) {
             next();
         } else {
-            res.status(404).json({Messgae: "invalid cart id"})
+            res.status(404).json({Messgae: "invalid car id"})
         }
     }).catch (error =>
         res.status(500).json({error: `Server error: ${error}`})
@@ -62,10 +62,10 @@ function validateCarId(req, res, next) {
 
 function validateCar(req, res, next) {
     if (req.body) {
-        if (req.body.name && req.body.budget) {
+        if (req.body.VIN && req.body.Make && req.body.Model && req.body.Mileage) {
             next ();
         } else {
-            res.status(400).json({ message: "missing required name or budget field"  })
+            res.status(400).json({ message: "missing required field"  })
         }
     } else {
         res.status(400).json({ message: "missing car data" })
